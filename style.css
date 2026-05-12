@@ -382,12 +382,54 @@ nav {
     width: 0;
     transition: width 1.5s ease;
 }
+/* ---- CELESTE MADELINE WALK ANIMATION ---- */
+.madeline-walker {
+    width: 32px; 
+    height: 32px;
+    background-image: url('images/madeline_walk.png'); 
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    position: absolute;
+    z-index: 5; 
+    image-rendering: pixelated; 
+    
+    /* Karakteri 3 kat büyütüyoruz */
+    transform: scale(3); 
+    transform-origin: bottom center;
 
-/* ---- SECTION SHARED ---- */
-#about, #skills, #projects, #contact {
-    padding: 100px 48px;
-    position: relative;
-    z-index: 2;
+    /* 1. Animasyon: 10 karelik yürüme efekti (Sprite) 
+      2. Animasyon: Soldan sağa 20 saniyelik yolculuk (Path)
+    */
+    animation: 
+        walkSprite 0.8s steps(10) infinite, 
+        walkPath 20s linear infinite; 
+}
+
+/* Yürüme Hareketi (Bacakların oynaması) */
+@keyframes walkSprite {
+    from { background-position: 0 0; }
+    /* 10 kare x 32px = 320px */
+    to { background-position: -320px 0; } 
+}
+
+/* Yürüme Rotası (Soldan Sağa Düz Çizgi) */
+@keyframes walkPath {
+    0% {
+        left: -10%;        /* Ekranın solundan, dışarıdan başlar */
+        bottom: 20px;      /* Zemin yüksekliği (Ekranına göre aşağı/yukarı yapabilirsin) */
+        opacity: 0;
+    }
+    5% {
+        opacity: 1;        /* Ekrana girerken görünür olur */
+    }
+    95% {
+        opacity: 1;
+    }
+    100% {
+        left: 110%;        /* Ekranın en sağına gidip kaybolur */
+        bottom: 20px;
+        opacity: 0;
+    }
 }
 
 #skills, #projects, #contact { padding-top: 80px; }
@@ -789,4 +831,29 @@ footer p {
     .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 32px; }
     .nav-links { display: none; }
     .hero-name { font-size: 14px; }
+}
+/* ---- BAŞA DÖN BUTONU ---- */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #ff6b9d; /* Temamızın vurgu rengi */
+    color: #0d0a1a;            /* Yazı rengi (Koyu arkaplan rengimiz) */
+    padding: 12px 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    text-decoration: none;
+    z-index: 99;               /* Her şeyin üstünde dursun */
+    
+    /* Retro 8-bit gölge efekti */
+    border: 2px solid #ff6b9d;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+    transition: all 0.2s ease-in-out;
+}
+
+.back-to-top:hover {
+    background-color: transparent;
+    color: #ff6b9d;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+    transform: translate(2px, 2px); /* Tıklanma hissi verir */
 }
