@@ -2,20 +2,20 @@
 session_start();
 require 'db.php';
 
-// Güvenlik Kontrolü: Oturum açılmamışsa login'e at
+// Security Check: Redirect to login if not signed in
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: login.php");
     exit;
 }
 
-// Çıkış Yapma İşlemi
+// Logout Action
 if (isset($_GET['logout'])) {
     session_destroy();
     header("Location: login.php");
     exit;
 }
 
-// Proje Silme İşlemi
+// Delete Project Action
 if (isset($_GET['delete_project'])) {
     $id = $_GET['delete_project'];
     $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
@@ -24,7 +24,7 @@ if (isset($_GET['delete_project'])) {
     exit;
 }
 
-// Mesaj Silme İşlemi
+// Delete Message Action
 if (isset($_GET['delete_msg'])) {
     $id = $_GET['delete_msg'];
     $stmt = $pdo->prepare("DELETE FROM messages WHERE id = ?");
@@ -33,7 +33,7 @@ if (isset($_GET['delete_msg'])) {
     exit;
 }
 
-// Yeni Proje Ekleme İşlemi
+// Add New Project Action
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_project'])) {
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
@@ -46,16 +46,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_project'])) {
     exit;
 }
 
-// Mevcut Verileri Veritabanından Çekme
+// Fetch Existing Data From Database
 $projects = $pdo->query("SELECT * FROM projects ORDER BY created_at DESC")->fetchAll();
 $messages = $pdo->query("SELECT * FROM messages ORDER BY sent_at DESC")->fetchAll();
 ?>
 
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yönetim Paneli</title>
+    <title>Admin Panel</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #1e1e2f; color: #fff; margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3f3f5a; padding-bottom: 10px; margin-bottom: 20px; }
@@ -74,49 +74,49 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY sent_at DESC")->fetchAl
 <body>
 
     <div class="header">
-        <h1>Portfolyo Yönetim Paneli</h1>
-        <a href="?logout=true" class="logout-btn">Çıkış Yap</a>
+        <h1>Portfolio Admin Panel</h1>
+        <a href="?logout=true" class="logout-btn">Log Out</a>
     </div>
 
     <div class="container">
-        <!-- Sol Taraf: Proje Ekleme ve Listesi -->
+        <!-- Left Side: Project Add and List -->
         <div class="card">
-            <h2>Yeni Proje Ekle</h2>
+            <h2>Add New Project</h2>
             <form method="POST" action="admin.php">
                 <input type="hidden" name="add_project" value="1">
-                <input type="text" name="title" placeholder="Proje Başlığı" required>
-                <textarea name="description" placeholder="Proje Açıklaması" rows="3"></textarea>
-                <input type="text" name="image_url" placeholder="Görsel URL'si (örn: images/proje1.jpg)">
-                <input type="text" name="project_link" placeholder="Proje Linki (Github vs.)">
-                <button type="submit">Projeyi Kaydet</button>
+                <input type="text" name="title" placeholder="Project Title" required oninvalid="this.setCustomValidity('Please fill out this field.')" oninput="this.setCustomValidity('')">
+                <textarea name="description" placeholder="Project Description" rows="3"></textarea>
+                <input type="text" name="image_url" placeholder="Image URL (e.g. images/project1.jpg)">
+                <input type="text" name="project_link" placeholder="Project Link (GitHub etc.)">
+                <button type="submit">Save Project</button>
             </form>
 
-            <h2 style="margin-top: 40px;">Mevcut Projeler</h2>
+            <h2 style="margin-top: 40px;">Existing Projects</h2>
             <table>
                 <tr>
-                    <th>Başlık</th>
-                    <th>Tarih</th>
-                    <th>İşlem</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Action</th>
                 </tr>
                 <?php foreach ($projects as $project): ?>
                 <tr>
                     <td><?= htmlspecialchars($project['title']) ?></td>
                     <td><?= date('d.m.Y', strtotime($project['created_at'])) ?></td>
-                    <td><a href="?delete_project=<?= $project['id'] ?>" class="action-link" onclick="return confirm('Projeyi silmek istediğine emin misin?');">Sil</a></td>
+                    <td><a href="?delete_project=<?= $project['id'] ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this project?');">Delete</a></td>
                 </tr>
                 <?php endforeach; ?>
-                <?php if(empty($projects)) echo "<tr><td colspan='3'>Henüz proje eklenmemiş.</td></tr>"; ?>
+                <?php if(empty($projects)) echo "<tr><td colspan='3'>No projects have been added yet.</td></tr>"; ?>
             </table>
         </div>
 
-        <!-- Sağ Taraf: Gelen Mesajlar -->
+        <!-- Right Side: Incoming Messages -->
         <div class="card">
-            <h2>Gelen Mesajlar</h2>
+            <h2>Incoming Messages</h2>
             <table>
                 <tr>
-                    <th>Gönderen</th>
-                    <th>Mesaj</th>
-                    <th>İşlem</th>
+                    <th>Sender</th>
+                    <th>Message</th>
+                    <th>Action</th>
                 </tr>
                 <?php foreach ($messages as $msg): ?>
                 <tr>
@@ -125,10 +125,10 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY sent_at DESC")->fetchAl
                         <small><?= htmlspecialchars($msg['email']) ?></small>
                     </td>
                     <td><?= nl2br(htmlspecialchars($msg['message'])) ?></td>
-                    <td><a href="?delete_msg=<?= $msg['id'] ?>" class="action-link" onclick="return confirm('Mesajı silmek istediğine emin misin?');">Sil</a></td>
+                    <td><a href="?delete_msg=<?= $msg['id'] ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this message?');">Delete</a></td>
                 </tr>
                 <?php endforeach; ?>
-                <?php if(empty($messages)) echo "<tr><td colspan='3'>Henüz mesaj yok.</td></tr>"; ?>
+                <?php if(empty($messages)) echo "<tr><td colspan='3'>No messages yet.</td></tr>"; ?>
             </table>
         </div>
     </div>

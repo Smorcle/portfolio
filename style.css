@@ -3,7 +3,7 @@
    style.css
    ============================================= */
 
-/* ---- CSS DEĞİŞKENLERİ (GECE MODU VARSAYILAN) ---- */
+/* ---- CSS VARIABLES (DARK MODE DEFAULT) ---- */
 :root {
     --bg: #0d0a1a;
     --surface: #161228;
@@ -21,7 +21,7 @@
     --glow-purple: 0 0 20px rgba(192,132,252,0.4);
 }
 
-/* ---- GÜNDÜZ MODU ---- */
+/* ---- LIGHT MODE ---- */
 body.light-mode {
     --bg: #f8f6ff;
     --surface: #ffffff;
@@ -393,42 +393,74 @@ nav {
     z-index: 5; 
     image-rendering: pixelated; 
     
-    /* Karakteri 3 kat büyütüyoruz */
-    transform: scale(3); 
+    /* Scale the character up 3x */
+    transform: scale(5); 
     transform-origin: bottom center;
 
-    /* 1. Animasyon: 10 karelik yürüme efekti (Sprite) 
-      2. Animasyon: Soldan sağa 20 saniyelik yolculuk (Path)
+        /* 1. Animation: 10-frame walking effect (Sprite) 
+            2. Animation: 20-second left-to-right journey (Path)
     */
     animation: 
         walkSprite 0.8s steps(10) infinite, 
         walkPath 20s linear infinite; 
 }
 
-/* Yürüme Hareketi (Bacakların oynaması) */
+/* Walking motion (leg animation) */
 @keyframes walkSprite {
     from { background-position: 0 0; }
-    /* 10 kare x 32px = 320px */
+    /* 10 frames x 32px = 320px */
     to { background-position: -320px 0; } 
 }
 
-/* Yürüme Rotası (Soldan Sağa Düz Çizgi) */
+/* Walking path (straight line from left to right) */
 @keyframes walkPath {
     0% {
-        left: -10%;        /* Ekranın solundan, dışarıdan başlar */
-        bottom: 20px;      /* Zemin yüksekliği (Ekranına göre aşağı/yukarı yapabilirsin) */
+        left: -10%;        /* Starts off-screen from the left */
+        bottom: 20px;      /* Ground height (adjust up/down for your screen) */
         opacity: 0;
     }
     5% {
-        opacity: 1;        /* Ekrana girerken görünür olur */
+        opacity: 1;        /* Becomes visible as it enters the screen */
     }
     95% {
         opacity: 1;
     }
     100% {
-        left: 110%;        /* Ekranın en sağına gidip kaybolur */
+        left: 110%;        /* Moves to the far right and disappears */
         bottom: 20px;
         opacity: 0;
+    }
+}
+/* ---- YENİ: HAVADA SÜZÜLEN KARAKTER (BOSS) ---- */
+.boss-hover {
+    position: absolute;
+    top: 25%;       
+    right: 15%;      
+    
+    /* 1. BOYUTU BÜYÜTTÜK: 48px'den 144px'e (3 kat) çıkardık */
+    width: 500px; 
+    height: 500px;
+    
+    background-image: url('images/boss15.png'); 
+    background-size: contain;
+    background-repeat: no-repeat;
+    image-rendering: pixelated; 
+    
+    animation: bossFloat 4s ease-in-out infinite;
+    z-index: 5; 
+}
+
+/* Süzülme Animasyonu ve Sağa Bakma (Aynalama) */
+@keyframes bossFloat {
+    0% {
+        /* 2. YÖNÜ ÇEVİRDİK: scaleX(-1) karakteri sağa döndürür */
+        transform: scaleX(-1) translateY(0px); 
+    }
+    50% {
+        transform: scaleX(-1) translateY(-30px); 
+    }
+    100% {
+        transform: scaleX(-1) translateY(0px); 
     }
 }
 
@@ -832,28 +864,38 @@ footer p {
     .nav-links { display: none; }
     .hero-name { font-size: 14px; }
 }
-/* ---- BAŞA DÖN BUTONU ---- */
+/* ---- BACK-TO-TOP BUTTON ---- */
 .back-to-top {
     position: fixed;
     bottom: 30px;
-    right: 30px;
-    background-color: #ff6b9d; /* Temamızın vurgu rengi */
-    color: #0d0a1a;            /* Yazı rengi (Koyu arkaplan rengimiz) */
+    left: 30px !important; 
+    right: auto !important; 
+    background-color: #ff6b9d;
+    color: #0d0a1a;
     padding: 12px 16px;
     font-family: 'Press Start 2P', monospace;
     font-size: 10px;
     text-decoration: none;
-    z-index: 99;               /* Her şeyin üstünde dursun */
-    
-    /* Retro 8-bit gölge efekti */
+    z-index: 99;
     border: 2px solid #ff6b9d;
     box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
-    transition: all 0.2s ease-in-out;
+    
+    /* NEW: Hidden and non-clickable by default, slightly shifted down */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: all 0.3s ease-in-out;
+}
+
+/* NEW: The button becomes visible when JavaScript adds this class */
+.back-to-top.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 .back-to-top:hover {
     background-color: transparent;
     color: #ff6b9d;
-    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
-    transform: translate(2px, 2px); /* Tıklanma hissi verir */
+    box-shadow: -2px 2px 0px rgba(0, 0, 0, 0.8); /* Adjusted shadow direction because it is on the left */
 }

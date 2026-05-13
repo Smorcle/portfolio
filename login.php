@@ -1,43 +1,43 @@
 <?php
-// Oturumu başlatıyoruz ki giriş yapıldığını sistem hatırlasın
+// Start the session so the system remembers the login state
 session_start();
 require 'db.php';
 
-// Eğer zaten giriş yapılmışsa, tekrar logine gelmesini engelleyip direkt admin paneline atıyoruz
+// If already logged in, redirect directly to the admin panel
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
     header("Location: admin.php");
     exit;
 }
 
-$hata_mesaji = "";
+$error_message = "";
 
-// Form gönderildiğinde çalışacak kısım
+// This part runs when the form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $kullanici_adi = trim($_POST['username']);
-    $sifre = trim($_POST['password']);
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    // Kullanıcıyı veritabanında ara
+    // Look up the user in the database
     $sql = "SELECT * FROM admin_user WHERE username = ?";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$kullanici_adi]);
-    $kullanici = $stmt->fetch();
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
 
-    // Kullanıcı bulunduysa ve şifre (hash ile) eşleşiyorsa
-    if ($kullanici && password_verify($sifre, $kullanici['password'])) {
+    // If the user exists and the password hash matches
+    if ($user && password_verify($password, $user['password'])) {
         $_SESSION['admin_logged_in'] = true;
-        header("Location: admin.php"); // Giriş başarılıysa admin.php'ye yönlendir
+        header("Location: admin.php"); // Redirect to admin.php if login is successful
         exit;
     } else {
-        $hata_mesaji = "Kullanıcı adı veya şifre hatalı!";
+        $error_message = "Invalid username or password!";
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Girişi</title>
+    <title>Admin Login</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #1e1e2f; margin: 0; }
         .login-container { background: #2a2a40; padding: 30px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 320px; }
@@ -51,16 +51,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <div class="login-container">
-        <h2>Yönetici Girişi</h2>
+        <h2>Admin Login</h2>
         
-        <?php if(!empty($hata_mesaji)): ?>
-            <div class="error"><?php echo $hata_mesaji; ?></div>
+        <?php if(!empty($error_message)): ?>
+            <div class="error"><?php echo $error_message; ?></div>
         <?php endif; ?>
         
         <form method="POST" action="login.php">
-            <input type="text" name="username" placeholder="Kullanıcı Adı" required>
-            <input type="password" name="password" placeholder="Şifre" required>
-            <button type="submit">Giriş Yap</button>
+            <input type="text" name="username" placeholder="Username" required oninvalid="this.setCustomValidity('Please fill out this field.')" oninput="this.setCustomValidity('')">
+            <input type="password" name="password" placeholder="Password" required oninvalid="this.setCustomValidity('Please fill out this field.')" oninput="this.setCustomValidity('')">
+            <button type="submit">Log In</button>
         </form>
     </div>
 </body>

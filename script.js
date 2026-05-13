@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor.style.transform = 'translate(-50%,-50%) scale(1)';
     });
 
-    // ---- 2. YILDIZ OLUŞTURMA ----
+    // ---- 2. STAR GENERATION ----
     const starsContainer = document.getElementById('stars');
     for (let i = 0; i < 80; i++) {
         const s = document.createElement('div');
@@ -36,19 +36,19 @@ document.addEventListener("DOMContentLoaded", () => {
         starsContainer.appendChild(s);
     }
 
-    // ---- 3. GECE / GÜNDÜZ MODU ----
+    // ---- 3. DARK / LIGHT MODE ----
     const toggleBtn = document.getElementById("dark-mode-toggle");
     toggleBtn.addEventListener("click", () => {
         document.body.classList.toggle("light-mode");
         const isLight = document.body.classList.contains("light-mode");
-        toggleBtn.textContent = isLight ? "☾ KARANLIK" : "☀ IŞIK";
+        toggleBtn.textContent = isLight ? "☾ DARK" : "☀ LIGHT";
     });
-    // ---- 6. SCROLL REVEAL & STAT BAR ANİMASYON (YUKARI TAŞINDI!) ----
+    // ---- 6. SCROLL REVEAL & STAT BAR ANIMATION (MOVED UP!) ----
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
-                // Stat barları animasyonla doldur
+                // Fill the stat bars with animation
                 entry.target.querySelectorAll('.stat-fill[data-val]').forEach(bar => {
                     bar.style.width = bar.dataset.val + '%';
                 });
@@ -56,84 +56,78 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }, { threshold: 0.15 });
 
-    // ---- 4. PROJELER (Statik Veri — Backend hazır olunca AJAX ile değiştir) ----
-    const projects = [
-        {
-            tag: "SİSTEM YAZILIMI",
-            title: "ChronicleLogic",
-            description: "Özelleştirilebilir sorgu dili ile gerçek zamanlı log analizi yapan, yüksek verimli bir log yönetim motoru. Saniyede 100K+ satır işleme kapasitesine sahip.",
-            tech: ["C++", "PostgreSQL", "ZeroMQ"],
-            link: "#"
-        },
-        {
-            tag: "GÖMÜLÜ SİSTEM",
-            title: "BeepGuide",
-            description: "Görme engelli bireyler için geliştirilmiş ultrasonik sensör tabanlı navigasyon sistemi. Raspberry Pi üzerinde çalışan, gerçek zamanlı ses geri bildirim algoritmasıyla donatılmış.",
-            tech: ["Python", "C", "Raspberry Pi", "I2C"],
-            link: "#"
-        },
-        {
-            tag: "WEB PLATFORMU",
-            title: "DevPortfolio CMS",
-            description: "Geliştiriciler için tasarlanmış, sürükle-bırak proje yönetimi, analitik dashboard ve otomatik SEO optimizasyonu sunan açık kaynaklı portföy yönetim sistemi.",
-            tech: ["React", "Node.js", "MongoDB"],
-            link: "#"
-        },
-        {
-            tag: "VERİTABANI",
-            title: "QueryForge",
-            description: "Karmaşık SQL sorgularını görsel olarak oluşturup optimize eden, performans analizi ve otomatik indeks önerisi sunan veritabanı yönetim aracı.",
-            tech: ["TypeScript", "MySQL", "Redis"],
-            link: "#"
-        }
-    ];
-
+   
     const container = document.getElementById("project-container");
-// Backend'den (veritabanından) projeleri çeken AJAX isteği
-    fetch("get_projects.php")
-        .then(response => response.json())
-        .then(data => {
-            // Veritabanından gelen data varsa onu kullan, 
-            // veritabanı boşsa geçici olarak JS içindeki statik projeleri (projects) göster
-            renderProjects(data.length > 0 ? data : projects);
-        })
-        .catch(error => {
-            console.error("Veritabanına bağlanılamadı:", error);
-            // Sunucuda hata olursa site boş kalmasın diye statik projeleri yükle
-            renderProjects(projects); 
-        });
+// FETCH PROJECTS FROM THE DATABASE
+fetch("get_projects.php")
+    .then(response => response.json())
+    .then(data => {
+        // If there are projects in the database, render them
+        if (data.length > 0) {
+            renderProjects(data);
+        } else {
+            // If the database is completely empty, show the user a message
+            document.getElementById('project-container').innerHTML = 
+                "<p style='color:var(--muted); text-align:center; font-family:var(--mono);'>There are no projects added yet.</p>";
+        }
+    })
+    .catch(error => {
+        console.error("Database error:", error);
+        document.getElementById('project-container').innerHTML = 
+            "<p style='color:#ff6b9d; text-align:center;'>Database connection error!</p>";
+    });
 
     
 
+    function escapeHtml(value) {
+        const str = String(value ?? '');
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function renderProjects(data) {
         if (!data.length) {
-            container.innerHTML = "<p style='color:var(--muted);font-family:var(--mono)'>Henüz proje eklenmemiş.</p>";
+            container.innerHTML = "<p style='color:var(--muted);font-family:var(--mono)'>There are no projects added yet.</p>";
             return;
         }
         data.forEach((p, i) => {
+            const projectTitle = escapeHtml(p.title);
+            const projectDescription = escapeHtml(p.description || '');
+            const projectLink = String(p.project_link || p.link || '').trim();
+            const safeLink = /^https?:\/\//i.test(projectLink) ? projectLink : '';
+            const projectTag = escapeHtml(p.tag || 'PROJE');
+            const techList = Array.isArray(p.tech)
+                ? p.tech
+                : (typeof p.tech === 'string' ? p.tech.split(',').map(t => t.trim()).filter(Boolean) : []);
+
             const card = document.createElement("div");
             card.className = "project-card reveal";
             card.style.transitionDelay = (i * 0.1) + 's';
             card.innerHTML = `
-                <div class="project-card-tag">${p.tag || 'PROJE'}</div>
-                <h3>${p.title}</h3>
-                <p>${p.description}</p>
+                <div class="project-card-tag">${projectTag}</div>
+                <h3>${projectTitle}</h3>
+                <p>${projectDescription}</p>
                 <div class="project-card-footer">
                     <div class="project-tech">
-                        ${(p.tech || []).map(t => `<span class="tech-badge">${t}</span>`).join('')}
+                        ${techList.map(t => `<span class="tech-badge">${escapeHtml(t)}</span>`).join('')}
                     </div>
-                    ${p.link ? `<a href="${p.link}" target="_blank" class="project-link">GÖRÜNTÜLE →</a>` : ''}
+                    ${safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener noreferrer" class="project-link">VIEW →</a>` : ''}
                 </div>
             `;
             container.appendChild(card);
-            // Yeni eklenen kartı observer'a kaydet
+            // Register the newly added card with the observer
             observer.observe(card);
         });
     }
 
-    // ---- 5. FORM VALİDASYON & GÖNDERİM ----
+    // ---- 5. FORM VALIDATION & SUBMISSION ----
     const contactForm  = document.getElementById("contactForm");
     const formResponse = document.getElementById("form-response");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
     contactForm.addEventListener("submit", (e) => {
         e.preventDefault();
@@ -142,23 +136,23 @@ document.addEventListener("DOMContentLoaded", () => {
         const email   = document.getElementById("email").value.trim();
         const message = document.getElementById("message").value.trim();
 
-        // Client-side validasyon
+        // Client-side validation
         if (name.length < 3) {
-            formResponse.innerHTML = "<span style='color:#ff6b9d'>! HATA: Ad en az 3 karakter olmalı.</span>";
+            formResponse.innerHTML = "<span style='color:#ff6b9d'>! ERROR: Name must be at least 3 characters long.</span>";
             return;
         }
-        if (!email.includes("@") || !email.includes(".")) {
-            formResponse.innerHTML = "<span style='color:#ff6b9d'>! HATA: Geçerli e-posta girin.</span>";
+        if (!emailRegex.test(email)) {
+            formResponse.innerHTML = "<span style='color:#ff6b9d'>! ERROR: Please enter a valid email address.</span>";
             return;
         }
         if (message.length < 10) {
-            formResponse.innerHTML = "<span style='color:#ff6b9d'>! HATA: Mesaj çok kısa.</span>";
+            formResponse.innerHTML = "<span style='color:#ff6b9d'>! ERROR: Message is too short.</span>";
             return;
         }
 
-        formResponse.innerHTML = "<span style='color:#c084fc'>▶ GÖNDERİLİYOR...</span>";
+        formResponse.innerHTML = "<span style='color:#c084fc'>▶ Sending...</span>";
 
-        // FormData oluşturup PHP dosyasına gönderiyoruz
+        // Create FormData and send it to the PHP file
         const formData = new FormData();
         formData.append("name", name);
         formData.append("email", email);
@@ -170,13 +164,13 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(response => response.text())
         .then(data => {
-            // PHP'den dönen başarılı/başarısız mesajını ekrana yazdır
+            // Display the success/failure message returned from PHP
             formResponse.innerHTML = `<span style='color:#38bdf8'>✓ ${data}</span>`;
-            contactForm.reset(); // Formu temizle
+            contactForm.reset(); // Clear the form
         })
         .catch(error => {
-            console.error("Hata:", error);
-            formResponse.innerHTML = "<span style='color:#ff6b9d'>! Bağlantı hatası. Mesaj iletilemedi.</span>";
+            console.error(" Error:", error);
+            formResponse.innerHTML = "<span style='color:#ff6b9d'>! Connection error. Message could not be sent.</span>";
         });
     });
 
@@ -184,10 +178,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // ---- 7. EXP BAR (sayfa yüklenince) ----
+    // ---- 7. EXP BAR (on page load) ----
     setTimeout(() => {
         const expFill = document.getElementById('exp-fill');
         if (expFill) expFill.style.width = '74%';
     }, 800);
 
 });
+// ---- 8. BACK-TO-TOP BUTTON VISIBILITY ----
+    const backToTopBtn = document.querySelector('.back-to-top');
+
+    window.addEventListener('scroll', () => {
+        // Add the 'show' class to the button when the page is scrolled down 800 pixels
+        if (window.scrollY > 800) {
+            backToTopBtn.classList.add('show');
+        } else {
+            // Hide the button again when scrolling back up
+            backToTopBtn.classList.remove('show');
+        }
+    });
