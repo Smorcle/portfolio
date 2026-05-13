@@ -4,7 +4,7 @@
 
 **Author:** Yusuf Efe Kızılkale  
 **Repository:** [github.com/Smorcle/portfolio](https://github.com/Smorcle/portfolio)  
-**Live Domain:** yek.dev  
+**Live Domain:** yekdev.infinityfreeapp.com  
 
 ---
 
